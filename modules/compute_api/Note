@@ -1,0 +1,99 @@
+#   # Secure SSH Access
+#   ingress {
+#     from_port   = 22
+#     to_port     = 22
+#     protocol    = "tcp"
+#     cidr_blocks = [var.ssh_cidr]
+#   }
+
+# or
+
+# data "http" "myip" {
+#   url = "https://checkip.amazonaws.com/"
+# }
+#   # Auto-detected SSH IP
+#   ingress {
+#     from_port   = 22
+#     to_port     = 22
+#     protocol    = "tcp"
+#     cidr_blocks = ["${chomp(data.http.myip.body)}/32"]
+#   }
+
+#   #!/bin/bash
+# # Update packages
+# apt-get update -y
+
+# # Install required packages
+# apt-get install -y nginx python3 python3-pip
+# pip3 install flask pymysql
+
+# #########################################
+# # Create Flask Application
+# #########################################
+
+# cat > /opt/smartlogix_app.py <<'PY'
+# from flask import Flask
+# import pymysql
+# app = Flask(__name__)
+
+# @app.route('/')
+# def index():
+#     return "SmartLogiX Tracking API Live"
+
+# @app.route('/db')
+# def db_check():
+#     try:
+#         conn = pymysql.connect(
+#             host="${db_endpoint}",
+#             user="${db_username}",
+#             password="${db_password}",
+#             database="smartlogix"
+#         )
+#         cur = conn.cursor()
+#         cur.execute("SELECT 'DB Connection Successful'")
+#         result = cur.fetchone()
+#         return str(result)
+#     except Exception as e:
+#         return str(e)
+# PY
+
+# #########################################
+# # Create SystemD Service
+# #########################################
+
+# cat > /etc/systemd/system/smartlogix.service <<'SU'
+# [Unit]
+# Description=SmartLogiX Flask App
+# After=network.target
+
+# [Service]
+# ExecStart=/usr/bin/python3 /opt/smartlogix_app.py
+# Restart=always
+# User=root
+
+# [Install]
+# WantedBy=multi-user.target
+# SU
+
+# systemctl daemon-reload
+# systemctl enable smartlogix
+# systemctl start smartlogix
+
+# #########################################
+# # Configure NGINX Reverse Proxy
+# #########################################
+
+# cat > /etc/nginx/sites-available/smartlogix <<'NG'
+# server {
+#     listen 80;
+#     location / {
+#         proxy_pass http://127.0.0.1:8080/;
+#     }
+# }
+# NG
+
+# ln -s /etc/nginx/sites-available/smartlogix /etc/nginx/sites-enabled/
+# rm -f /etc/nginx/sites-enabled/default
+# systemctl restart nginx
+# ##
+# hello

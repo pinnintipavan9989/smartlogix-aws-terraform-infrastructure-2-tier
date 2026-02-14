@@ -1,0 +1,170 @@
+#(Requires jq on your machine or EC2. This simulates adding work notes in the ITSM ticket.)
+
+✅ SMARTLOGIX – FULL SETUP & TROUBLESHOOTING GUIDE
+
+Below is the step-by-step, correct, clean, reusable process.
+
+1️⃣ Connect to EC2
+ssh -i yourkey.pem ubuntu@YOUR_PUBLIC_IP
+
+2️⃣ Install required packages
+sudo apt update -y
+sudo apt install -y python3 python3-pip mysql-client jq
+
+3️⃣ Install Python dependencies
+sudo pip3 install flask pymysql
+
+4️⃣ Create SmartLogiX Flask App
+
+Location:
+
+sudo nano /opt/smartlogix_app.py
+
+
+Paste this clean final code:
+
+from flask import Flask, jsonify
+import pymysql
+
+app = Flask(__name__)
+
+# DB Connection
+def get_db_connection():
+    return pymysql.connect(
+        host="pavan-624615-dev-mysql.cvammsyau4lt.us-east-1.rds.amazonaws.com",
+        user="smartlogix_admin",
+        password="6&?d&-[Pc(+&pmnO",
+        database="smartlogix",
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+# -----------------------------
+# SHIPMENTS ENDPOINT
+# -----------------------------
+@app.route("/shipments", methods=["GET"])
+def shipments():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Shipments")
+        data = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# -----------------------------
+# STATUS HISTORY ENDPOINT
+# -----------------------------
+@app.route("/statushistory", methods=["GET"])
+def status_history():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM StatusHistory")
+        data = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# -----------------------------
+# ROOT ENDPOINT
+# -----------------------------
+@app.route("/")
+def home():
+    return jsonify({"message": "SmartLogiX API running"})
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
+
+
+Save → CTRL + O, Enter
+Exit → CTRL + X
+
+5️⃣ Create systemd service
+sudo nano /etc/systemd/system/smartlogix.service
+
+
+Paste:
+
+[Unit]
+Description=SmartLogiX Flask App
+After=network.target
+
+[Service]
+User=ubuntu
+ExecStart=/usr/bin/python3 /opt/smartlogix_app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+6️⃣ Reload systemd & Start service
+sudo systemctl daemon-reload
+sudo systemctl enable smartlogix
+sudo systemctl restart smartlogix
+sudo systemctl status smartlogix -n 20
+
+7️⃣ VERIFY APP IS RUNNING
+curl http://localhost:8080/
+
+
+Expected:
+
+{"message":"SmartLogiX API running"}
+
+8️⃣ PRETTIFY JSON WITH JQ ✅ (YOU ASKED FOR THIS STEP)
+
+Install jq once:
+
+sudo apt install jq -y
+
+
+Use it wherever you want pretty output:
+
+📌 Shipments (pretty JSON)
+curl http://localhost:8080/shipments | jq
+
+📌 Status History (pretty JSON)
+curl http://localhost:8080/statushistory | jq
+
+9️⃣ If port conflict happens
+sudo systemctl stop smartlogix
+sudo fuser -k 8080/tcp
+sudo systemctl start smartlogix
+
+🔟 If you edit the Python file
+
+Always run:
+
+sudo systemctl daemon-reload
+sudo systemctl restart smartlogix
+sudo systemctl status smartlogix
+
+🧪 MySQL Verification (from EC2)
+mysql -h pavan-624615-dev-mysql.cvammsyau4lt.us-east-1.rds.amazonaws.com -u smartlogix_admin -p
+
+
+Inside MySQL:
+
+USE smartlogix;
+SELECT * FROM Shipments;
+SELECT * FROM StatusHistory;
+
+🎯 Your API Endpoints (Final)
+API	URL
+Health Check	http://<EC2-IP>:8080/
+Shipments	http://<EC2-IP>:8080/shipments
+Status History	http://<EC2-IP>:8080/statushistory
+If you want, I can also generate:
+
+✅ API documentation
+✅ Terraform module integration
+✅ System architecture diagram
+✅ HTML frontend to view shipments
+
+Just tell me — I’ll build anything you need.

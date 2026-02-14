@@ -1,0 +1,4 @@
+#export BACKUP_BUCKET=pavan-624615-dev-backups
+#export PROJECT_PREFIX=pavan-624615
+#export ENV=dev
+# then run: /usr/local/bin/vm_health_check.sh

@@ -1,0 +1,7 @@
+{
+  "cr_id": "CR-102",
+  "change": "Added Nginx rate limit to protect API",
+  "status": "Implemented",
+  "updated_by": "Pavan",
+  "timestamp": "2025-12-12T10:30"
+}

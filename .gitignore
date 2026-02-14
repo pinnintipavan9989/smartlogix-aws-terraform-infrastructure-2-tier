@@ -1,0 +1,23 @@
+# Ignore real variable files
+terraform.tfvars
+*.auto.tfvars
+
+# Allow example file
+!terraform.tfvars.example
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Plan files
+*.plan
+
+# Backup files
+*.backup
+
+# Logs / txt (optional)
+*.txt
+
+# Private keys
+*.pem
